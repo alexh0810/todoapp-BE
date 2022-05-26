@@ -2,9 +2,6 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
 module.exports = async (req, res, next) => {
-  if (process.env.NODE_ENV === "test") {
-    return next();
-  }
   const token = req.header("jwt_token");
 
   if (!token) {
