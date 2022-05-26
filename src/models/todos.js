@@ -29,23 +29,21 @@ const getTodoById = async (id, user_id) => {
     "SELECT * FROM todo where todo_id = $1 AND user_id = $2",
     [id, user_id]
   );
-  return todo.rows[0];
+  return todo.rows && todo.rows[0];
 };
 
 const updateTodoById = async (name, current_status, id, user_id) => {
-  const updateTodo = await pool.query(
+  await pool.query(
     "UPDATE todo SET name = $1, current_status = $2 WHERE todo_id = $3 AND user_id = $4",
     [name, current_status, id, user_id]
   );
-  return;
 };
 
 const deleteTodo = async (id, user_id) => {
-  const deleteTodo = await pool.query(
+  await pool.query(
     "DELETE FROM todo WHERE todo_id = $1 AND user_id = $2",
     [id, user_id]
   );
-  return;
 };
 
 module.exports = {
@@ -53,5 +51,6 @@ module.exports = {
   getAllTodosByStatus,
   createNewTodo,
   getTodoById,
+  updateTodoById,
   deleteTodo
 };

@@ -1,7 +1,7 @@
-const pool = require("../db/db");
 const bcrypt = require("bcrypt");
 const jwtGenerator = require("../utils/jwtGenerator");
 const authModel = require("../models/auth");
+
 const signUp = async (req, res) => {
   try {
     //1. Destructure the req.body
@@ -10,11 +10,12 @@ const signUp = async (req, res) => {
 
     //2. Check if user exists (throw error if existed)
 
-    const user = await authModel.checkIfUserExist(email);
+    const user = await authModel.getUserByEmail(email);
 
-    if (user.rows.length !== 0) {
-      return res.status(401).send("User already exists!");
+    if (user) {
+      return res.status(409).send("User already exists!");
     }
+
     //3. Bcrypt the user password
 
     const saltRound = 10;
@@ -28,7 +29,7 @@ const signUp = async (req, res) => {
 
     //5. Generating JWT token
 
-    const token = jwtGenerator(newUser.rows[0].user_id);
+    const token = jwtGenerator(newUser.user_id);
     res.json({ token });
   } catch (err) {
     console.error(err.message);
@@ -44,16 +45,16 @@ const signIn = async (req, res) => {
 
     //2. Check if user exists (if not then throw error)
 
-    const user = await authModel.checkIfUserExist(email);
+    const user = await authModel.getUserByEmail(email);
 
-    if (user.rows.length === 0) {
+    if (!user) {
       return res.status(401).json("Password or Email is incorrect.");
     }
     //3. Check if input password is the same as DB password
 
     const validPassword = await bcrypt.compare(
       password,
-      user.rows[0].user_password
+      user.user_password
     );
 
     if (!validPassword) {
@@ -61,24 +62,57 @@ const signIn = async (req, res) => {
     }
 
     //4. Give user the JWT token
-
-    const token = jwtGenerator(user.rows[0].user_id);
+    const token = jwtGenerator(user.user_id);
     res.json({ token });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
   }
 };
-const verify = async (req, res) => {
+
+const changePassword = async (req, res) => {
+  const { old_password, new_password } = req.body;
+  const user_id = req.user;
+
   try {
-    res.json(true);
+    // check if user exists
+    console.log(user_id);
+    const user = await authModel.getUserById(user_id);
+    if (!user) {
+      return res.status(404).json("User does not exist!");
+    }
+
+    // Check if old password is the same as DB password
+    const validPassword = await bcrypt.compare(
+        old_password,
+        user.user_password
+    );
+
+    if (!validPassword) {
+      return res.status(400).json("Old password is not correct.");
+    }
+
+    // Salt new password
+    const saltRound = 10;
+    const salt = await bcrypt.genSalt(saltRound);
+
+    const bcryptPassword = await bcrypt.hash(new_password, salt);
+
+    // Update user with new password
+    await authModel.updateUserPassword(bcryptPassword, user_id);
+
+    // Generate new token
+    const token = jwtGenerator(user_id);
+
+    res.json({ token })
   } catch (err) {
     console.error(err.message);
-    res.status(500).send("Server error");
+    res.status(500).send("Server Error");
   }
-};
+}
+
 module.exports = {
   signIn,
   signUp,
-  verify,
+  changePassword
 };
