@@ -1,3 +1,5 @@
+const path = require("path");
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -5,8 +7,7 @@ const pool = require("./db/db");
 const jwt = require("jsonwebtoken");
 const todoRouter = require("./routes/todos");
 const authRouter = require("./routes/auth");
-const path = require("path");
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
+
 
 const PORT = 5000;
 

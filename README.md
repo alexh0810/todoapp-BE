@@ -31,8 +31,7 @@ npm install
 
 - Then start the server with:
 ````
-cd src 
-nodemon app.js or node app.js 
+npm start or npm run dev (watch mode)
 ````
 
 ## Technology

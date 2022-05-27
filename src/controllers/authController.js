@@ -76,7 +76,6 @@ const changePassword = async (req, res) => {
 
   try {
     // check if user exists
-    console.log(user_id);
     const user = await authModel.getUserById(user_id);
     if (!user) {
       return res.status(404).json("User does not exist!");
